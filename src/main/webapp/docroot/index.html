@@ -21,7 +21,7 @@
 <!-- Placed at the end of the document so the pages load faster -->
 <!-- http://stackoverflow.com/questions/10093835/coffeescript-class-not-accessible-in-main-javascript -->
 <script type="text/javascript">
-    App = {};
+    Sensus = {};
 </script>
 
 <script type="text/javascript" src="lib/jquery-3.2.1.js"></script>
@@ -37,14 +37,18 @@
 <script type="text/javascript" src="framework/AppSupport.js"></script>
 <script type="text/javascript" src="framework/SelfLoadingView.js"></script>
 
-<script type="text/javascript" src="app/SensusView/SensusView.js"></script>
+<script type="text/javascript" src="model/Proposal.js"></script>
+
+<script type="text/javascript" src="app/NavBar.js"></script>
+<script type="text/javascript" src="app/ProposalCell.js"></script>
+<script type="text/javascript" src="app/ProposalList.js"></script>
+<script type="text/javascript" src="app/MainContent.js"></script>
+<script type="text/javascript" src="app/SensusApp.js"></script>
 
 <script type="text/javascript">
     window.onload = function() {
-        var pageContainer = document.getElementById('PageContainer');
-        var sensusView = new App.SensusView();
-        var viewElement = sensusView.render().el;
-        pageContainer.parentNode.replaceChild(viewElement, pageContainer);
+        var sensusApp = new Sensus.SensusApp();
+        $('#PageContainer').replaceWith(sensusApp.render());
     };
 </script>
 

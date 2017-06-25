@@ -13,7 +13,7 @@
       return SelfLoadingView.__super__.constructor.apply(this, arguments);
     }
 
-    SelfLoadingView.prototype.replaceRootElement = false;
+    SelfLoadingView.prototype.replaceRootElement = true;
 
     SelfLoadingView.prototype.render = function() {
       var elements, html;
@@ -30,12 +30,12 @@
       } else {
         this.$el.html = html;
       }
-      return this;
+      return this.$el;
     };
 
     SelfLoadingView.prototype.loadTemplate = function() {
       if (!this.template) {
-        return $.ajax({
+        $.ajax({
           url: this.scriptLocation.slice(0, -2) + "html",
           async: false,
           dataType: "text",
@@ -51,6 +51,7 @@
           })(this)
         });
       }
+      return this;
     };
 
     return SelfLoadingView;

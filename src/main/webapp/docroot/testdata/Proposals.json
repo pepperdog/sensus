@@ -1,0 +1,722 @@
+[
+{
+"issue_number" : "SE-0001",
+"title" : "keywords-as-argument-labels"
+},
+{
+"issue_number" : "SE-0002",
+"title" : "remove-currying"
+},
+{
+"issue_number" : "SE-0003",
+"title" : "remove-var-parameters"
+},
+{
+"issue_number" : "SE-0004",
+"title" : "remove-pre-post-inc-decrement"
+},
+{
+"issue_number" : "SE-0005",
+"title" : "objective-c-name-translation"
+},
+{
+"issue_number" : "SE-0006",
+"title" : "apply-api-guidelines-to-the-standard-library"
+},
+{
+"issue_number" : "SE-0007",
+"title" : "remove-c-style-for-loops"
+},
+{
+"issue_number" : "SE-0008",
+"title" : "lazy-flatmap-for-optionals"
+},
+{
+"issue_number" : "SE-0009",
+"title" : "require-self-for-accessing-instance-members"
+},
+{
+"issue_number" : "SE-0010",
+"title" : "add-staticstring-unicodescalarview"
+},
+{
+"issue_number" : "SE-0011",
+"title" : "replace-typealias-associated"
+},
+{
+"issue_number" : "SE-0012",
+"title" : "add-noescape-to-public-library-api"
+},
+{
+"issue_number" : "SE-0013",
+"title" : "remove-partial-application-super"
+},
+{
+"issue_number" : "SE-0014",
+"title" : "constrained-AnySequence"
+},
+{
+"issue_number" : "SE-0015",
+"title" : "tuple-comparison-operators"
+},
+{
+"issue_number" : "SE-0016",
+"title" : "initializers-for-converting-unsafe-pointers-to-ints"
+},
+{
+"issue_number" : "SE-0017",
+"title" : "convert-unmanaged-to-use-unsafepointer"
+},
+{
+"issue_number" : "SE-0018",
+"title" : "flexible-memberwise-initialization"
+},
+{
+"issue_number" : "SE-0019",
+"title" : "package-manager-testing"
+},
+{
+"issue_number" : "SE-0020",
+"title" : "if-swift-version"
+},
+{
+"issue_number" : "SE-0021",
+"title" : "generalized-naming"
+},
+{
+"issue_number" : "SE-0022",
+"title" : "objc-selectors"
+},
+{
+"issue_number" : "SE-0023",
+"title" : "api-guidelines"
+},
+{
+"issue_number" : "SE-0024",
+"title" : "optional-value-setter"
+},
+{
+"issue_number" : "SE-0025",
+"title" : "scoped-access-level"
+},
+{
+"issue_number" : "SE-0026",
+"title" : "abstract-classes-and-methods"
+},
+{
+"issue_number" : "SE-0027",
+"title" : "string-from-code-units"
+},
+{
+"issue_number" : "SE-0028",
+"title" : "modernizing-debug-identifiers"
+},
+{
+"issue_number" : "SE-0029",
+"title" : "remove-implicit-tuple-splat"
+},
+{
+"issue_number" : "SE-0030",
+"title" : "property-behavior-decls"
+},
+{
+"issue_number" : "SE-0031",
+"title" : "adjusting-inout-declarations"
+},
+{
+"issue_number" : "SE-0032",
+"title" : "sequencetype-find"
+},
+{
+"issue_number" : "SE-0033",
+"title" : "import-objc-constants"
+},
+{
+"issue_number" : "SE-0034",
+"title" : "disambiguating-line"
+},
+{
+"issue_number" : "SE-0035",
+"title" : "limit-inout-capture"
+},
+{
+"issue_number" : "SE-0036",
+"title" : "enum-dot"
+},
+{
+"issue_number" : "SE-0037",
+"title" : "clarify-comments-and-operators"
+},
+{
+"issue_number" : "SE-0038",
+"title" : "swiftpm-c-language-targets"
+},
+{
+"issue_number" : "SE-0039",
+"title" : "playgroundliterals"
+},
+{
+"issue_number" : "SE-0040",
+"title" : "attributecolons"
+},
+{
+"issue_number" : "SE-0041",
+"title" : "conversion-protocol-conventions"
+},
+{
+"issue_number" : "SE-0042",
+"title" : "flatten-method-types"
+},
+{
+"issue_number" : "SE-0043",
+"title" : "declare-variables-in-case-labels-with-multiple-patterns"
+},
+{
+"issue_number" : "SE-0044",
+"title" : "import-as-member"
+},
+{
+"issue_number" : "SE-0045",
+"title" : "scan-takewhile-dropwhile"
+},
+{
+"issue_number" : "SE-0046",
+"title" : "first-label"
+},
+{
+"issue_number" : "SE-0047",
+"title" : "nonvoid-warn"
+},
+{
+"issue_number" : "SE-0048",
+"title" : "generic-typealias"
+},
+{
+"issue_number" : "SE-0049",
+"title" : "noescape-autoclosure-type-attrs"
+},
+{
+"issue_number" : "SE-0050",
+"title" : "floating-point-stride"
+},
+{
+"issue_number" : "SE-0051",
+"title" : "stride-semantics"
+},
+{
+"issue_number" : "SE-0052",
+"title" : "iterator-post-nil-guarantee"
+},
+{
+"issue_number" : "SE-0053",
+"title" : "remove-let-from-function-parameters"
+},
+{
+"issue_number" : "SE-0054",
+"title" : "abolish-iuo"
+},
+{
+"issue_number" : "SE-0055",
+"title" : "optional-unsafe-pointers"
+},
+{
+"issue_number" : "SE-0056",
+"title" : "trailing-closures-in-guard"
+},
+{
+"issue_number" : "SE-0057",
+"title" : "importing-objc-generics"
+},
+{
+"issue_number" : "SE-0058",
+"title" : "objectivecbridgeable"
+},
+{
+"issue_number" : "SE-0059",
+"title" : "updated-set-apis"
+},
+{
+"issue_number" : "SE-0060",
+"title" : "defaulted-parameter-order"
+},
+{
+"issue_number" : "SE-0061",
+"title" : "autoreleasepool-signature"
+},
+{
+"issue_number" : "SE-0062",
+"title" : "objc-keypaths"
+},
+{
+"issue_number" : "SE-0063",
+"title" : "swiftpm-system-module-search-paths"
+},
+{
+"issue_number" : "SE-0064",
+"title" : "property-selectors"
+},
+{
+"issue_number" : "SE-0065",
+"title" : "collections-move-indices"
+},
+{
+"issue_number" : "SE-0066",
+"title" : "standardize-function-type-syntax"
+},
+{
+"issue_number" : "SE-0067",
+"title" : "floating-point-protocols"
+},
+{
+"issue_number" : "SE-0068",
+"title" : "universal-self"
+},
+{
+"issue_number" : "SE-0069",
+"title" : "swift-mutability-for-foundation"
+},
+{
+"issue_number" : "SE-0070",
+"title" : "optional-requirements"
+},
+{
+"issue_number" : "SE-0071",
+"title" : "member-keywords"
+},
+{
+"issue_number" : "SE-0072",
+"title" : "eliminate-implicit-bridging-conversions"
+},
+{
+"issue_number" : "SE-0073",
+"title" : "noescape-once"
+},
+{
+"issue_number" : "SE-0074",
+"title" : "binary-search"
+},
+{
+"issue_number" : "SE-0075",
+"title" : "import-test"
+},
+{
+"issue_number" : "SE-0076",
+"title" : "copying-to-unsafe-mutable-pointer-with-unsafe-pointer-source"
+},
+{
+"issue_number" : "SE-0077",
+"title" : "operator-precedence"
+},
+{
+"issue_number" : "SE-0078",
+"title" : "rotate-algorithm"
+},
+{
+"issue_number" : "SE-0079",
+"title" : "upgrade-self-from-weak-to-strong"
+},
+{
+"issue_number" : "SE-0080",
+"title" : "failable-numeric-initializers"
+},
+{
+"issue_number" : "SE-0081",
+"title" : "move-where-expression"
+},
+{
+"issue_number" : "SE-0082",
+"title" : "swiftpm-package-edit"
+},
+{
+"issue_number" : "SE-0083",
+"title" : "remove-bridging-from-dynamic-casts"
+},
+{
+"issue_number" : "SE-0084",
+"title" : "trailing-commas"
+},
+{
+"issue_number" : "SE-0085",
+"title" : "package-manager-command-name"
+},
+{
+"issue_number" : "SE-0086",
+"title" : "drop-foundation-ns"
+},
+{
+"issue_number" : "SE-0087",
+"title" : "lazy-attribute"
+},
+{
+"issue_number" : "SE-0088",
+"title" : "libdispatch-for-swift3"
+},
+{
+"issue_number" : "SE-0089",
+"title" : "rename-string-reflection-init"
+},
+{
+"issue_number" : "SE-0090",
+"title" : "remove-dot-self"
+},
+{
+"issue_number" : "SE-0091",
+"title" : "improving-operators-in-protocols"
+},
+{
+"issue_number" : "SE-0092",
+"title" : "typealiases-in-protocols"
+},
+{
+"issue_number" : "SE-0093",
+"title" : "slice-base"
+},
+{
+"issue_number" : "SE-0094",
+"title" : "sequence-function"
+},
+{
+"issue_number" : "SE-0095",
+"title" : "any-as-existential"
+},
+{
+"issue_number" : "SE-0096",
+"title" : "dynamictype"
+},
+{
+"issue_number" : "SE-0097",
+"title" : "negative-attributes"
+},
+{
+"issue_number" : "SE-0098",
+"title" : "didset-capitalization"
+},
+{
+"issue_number" : "SE-0099",
+"title" : "conditionclauses"
+},
+{
+"issue_number" : "SE-0100",
+"title" : "add-sequence-based-init-and-merge-to-dictionary"
+},
+{
+"issue_number" : "SE-0101",
+"title" : "standardizing-sizeof-naming"
+},
+{
+"issue_number" : "SE-0102",
+"title" : "noreturn-bottom-type"
+},
+{
+"issue_number" : "SE-0103",
+"title" : "make-noescape-default"
+},
+{
+"issue_number" : "SE-0104",
+"title" : "improved-integers"
+},
+{
+"issue_number" : "SE-0105",
+"title" : "remove-where-from-forin-loops"
+},
+{
+"issue_number" : "SE-0106",
+"title" : "rename-osx-to-macos"
+},
+{
+"issue_number" : "SE-0107",
+"title" : "unsaferawpointer"
+},
+{
+"issue_number" : "SE-0108",
+"title" : "remove-assoctype-inference"
+},
+{
+"issue_number" : "SE-0109",
+"title" : "remove-boolean"
+},
+{
+"issue_number" : "SE-0110",
+"title" : "distingish-single-tuple-arg"
+},
+{
+"issue_number" : "SE-0111",
+"title" : "remove-arg-label-type-significance"
+},
+{
+"issue_number" : "SE-0112",
+"title" : "nserror-bridging"
+},
+{
+"issue_number" : "SE-0113",
+"title" : "rounding-functions-on-floatingpoint"
+},
+{
+"issue_number" : "SE-0114",
+"title" : "buffer-naming"
+},
+{
+"issue_number" : "SE-0115",
+"title" : "literal-syntax-protocols"
+},
+{
+"issue_number" : "SE-0116",
+"title" : "id-as-any"
+},
+{
+"issue_number" : "SE-0117",
+"title" : "non-public-subclassable-by-default"
+},
+{
+"issue_number" : "SE-0118",
+"title" : "closure-parameter-names-and-labels"
+},
+{
+"issue_number" : "SE-0119",
+"title" : "extensions-access-modifiers"
+},
+{
+"issue_number" : "SE-0120",
+"title" : "revise-partition-method"
+},
+{
+"issue_number" : "SE-0121",
+"title" : "remove-optional-comparison-operators"
+},
+{
+"issue_number" : "SE-0122",
+"title" : "use-colons-for-subscript-type-declarations"
+},
+{
+"issue_number" : "SE-0123",
+"title" : "disallow-value-to-optional-coercion-in-operator-arguments"
+},
+{
+"issue_number" : "SE-0124",
+"title" : "bitpattern-label-for-int-initializer-objectidentfier"
+},
+{
+"issue_number" : "SE-0125",
+"title" : "remove-nonobjectivecbase"
+},
+{
+"issue_number" : "SE-0126",
+"title" : "refactor-metatypes-repurpose-t-dot-self-and-mirror"
+},
+{
+"issue_number" : "SE-0127",
+"title" : "cleaning-up-stdlib-ptr-buffer"
+},
+{
+"issue_number" : "SE-0128",
+"title" : "unicodescalar-failable-initializer"
+},
+{
+"issue_number" : "SE-0129",
+"title" : "package-manager-test-naming-conventions"
+},
+{
+"issue_number" : "SE-0130",
+"title" : "string-initializers-cleanup"
+},
+{
+"issue_number" : "SE-0131",
+"title" : "anyhashable"
+},
+{
+"issue_number" : "SE-0132",
+"title" : "sequence-end-ops"
+},
+{
+"issue_number" : "SE-0133",
+"title" : "rename-flatten-to-joined"
+},
+{
+"issue_number" : "SE-0134",
+"title" : "rename-string-properties"
+},
+{
+"issue_number" : "SE-0135",
+"title" : "package-manager-support-for-differentiating-packages-by-swift-version"
+},
+{
+"issue_number" : "SE-0136",
+"title" : "memory-layout-of-values"
+},
+{
+"issue_number" : "SE-0137",
+"title" : "avoiding-lock-in"
+},
+{
+"issue_number" : "SE-0138",
+"title" : "unsaferawbufferpointer"
+},
+{
+"issue_number" : "SE-0139",
+"title" : "bridge-nsnumber-and-nsvalue"
+},
+{
+"issue_number" : "SE-0140",
+"title" : "bridge-optional-to-nsnull"
+},
+{
+"issue_number" : "SE-0141",
+"title" : "available-by-swift-version"
+},
+{
+"issue_number" : "SE-0142",
+"title" : "associated-types-constraints"
+},
+{
+"issue_number" : "SE-0143",
+"title" : "conditional-conformances"
+},
+{
+"issue_number" : "SE-0144",
+"title" : "allow-single-dollar-sign-as-valid-identifier"
+},
+{
+"issue_number" : "SE-0145",
+"title" : "package-manager-version-pinning"
+},
+{
+"issue_number" : "SE-0146",
+"title" : "package-manager-product-definitions"
+},
+{
+"issue_number" : "SE-0147",
+"title" : "move-unsafe-initialize-from"
+},
+{
+"issue_number" : "SE-0148",
+"title" : "generic-subscripts"
+},
+{
+"issue_number" : "SE-0149",
+"title" : "package-manager-top-of-tree"
+},
+{
+"issue_number" : "SE-0150",
+"title" : "package-manager-branch-support"
+},
+{
+"issue_number" : "SE-0151",
+"title" : "package-manager-swift-language-compatibility-version"
+},
+{
+"issue_number" : "SE-0152",
+"title" : "package-manager-tools-version"
+},
+{
+"issue_number" : "SE-0153",
+"title" : "compensate-for-the-inconsistency-of-nscopyings-behaviour"
+},
+{
+"issue_number" : "SE-0154",
+"title" : "dictionary-key-and-value-collections"
+},
+{
+"issue_number" : "SE-0155",
+"title" : "normalize-enum-case-representation"
+},
+{
+"issue_number" : "SE-0156",
+"title" : "subclass-existentials"
+},
+{
+"issue_number" : "SE-0157",
+"title" : "recursive-protocol-constraints"
+},
+{
+"issue_number" : "SE-0158",
+"title" : "package-manager-manifest-api-redesign"
+},
+{
+"issue_number" : "SE-0159",
+"title" : "fix-private-access-levels"
+},
+{
+"issue_number" : "SE-0160",
+"title" : "objc-inference"
+},
+{
+"issue_number" : "SE-0161",
+"title" : "key-paths"
+},
+{
+"issue_number" : "SE-0162",
+"title" : "package-manager-custom-target-layouts"
+},
+{
+"issue_number" : "SE-0163",
+"title" : "string-revision-1"
+},
+{
+"issue_number" : "SE-0164",
+"title" : "remove-final-support-in-protocol-extensions"
+},
+{
+"issue_number" : "SE-0165",
+"title" : "dict"
+},
+{
+"issue_number" : "SE-0166",
+"title" : "swift-archival-serialization"
+},
+{
+"issue_number" : "SE-0167",
+"title" : "swift-encoders"
+},
+{
+"issue_number" : "SE-0168",
+"title" : "multi-line-string-literals"
+},
+{
+"issue_number" : "SE-0169",
+"title" : "improve-interaction-between-private-declarations-and-extensions"
+},
+{
+"issue_number" : "SE-0170",
+"title" : "nsnumber_bridge"
+},
+{
+"issue_number" : "SE-0171",
+"title" : "reduce-with-inout"
+},
+{
+"issue_number" : "SE-0172",
+"title" : "one-sided-ranges"
+},
+{
+"issue_number" : "SE-0173",
+"title" : "swap-indices"
+},
+{
+"issue_number" : "SE-0174",
+"title" : "filter-range-replaceable"
+},
+{
+"issue_number" : "SE-0175",
+"title" : "package-manager-revised-dependency-resolution"
+},
+{
+"issue_number" : "SE-0176",
+"title" : "enforce-exclusive-access-to-memory"
+},
+{
+"issue_number" : "SE-0177",
+"title" : "add-clamped-to-method"
+},
+{
+"issue_number" : "SE-0178",
+"title" : "character-unicode-view"
+},
+{
+"issue_number" : "SE-0179",
+"title" : "swift-run-command"
+},
+{
+"issue_number" : "SE-0180",
+"title" : "string-index-overhaul"
+}
+]

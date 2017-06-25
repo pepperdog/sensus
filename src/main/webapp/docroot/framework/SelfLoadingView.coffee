@@ -4,7 +4,8 @@ class AppSupport.SelfLoadingView extends Backbone.View
     # Subclasses must do this for auto template resolution
     #scriptLocation: AppSupport.scriptLocation()
 
-    replaceRootElement: false
+    # We generally want to supply our own root element inside the html template
+    replaceRootElement: true
 
     # override
     render: =>
@@ -19,7 +20,7 @@ class AppSupport.SelfLoadingView extends Backbone.View
             @$el = $(@el)
         else
             @$el.html = html
-        @
+        @$el
 
 
     loadTemplate: =>
@@ -32,3 +33,4 @@ class AppSupport.SelfLoadingView extends Backbone.View
                     @template = _.template(data)
                 error: (xhr, status, error) =>
                     console.log("AJAX Error: #{status}")
+        @
