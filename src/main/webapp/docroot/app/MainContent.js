@@ -8,6 +8,7 @@
     extend(MainContent, superClass);
 
     function MainContent() {
+      this.update = bind(this.update, this);
       this.render = bind(this.render, this);
       this.initialize = bind(this.initialize, this);
       return MainContent.__super__.constructor.apply(this, arguments);
@@ -15,16 +16,31 @@
 
     MainContent.prototype.proposalList = null;
 
+    MainContent.prototype.proposalView = null;
+
     MainContent.prototype.scriptLocation = AppSupport.scriptLocation();
 
     MainContent.prototype.initialize = function(options) {
-      MainContent.__super__.initialize.call(this, options);
-      return this.proposalList = new Sensus.ProposalList();
+      return MainContent.__super__.initialize.call(this, options);
     };
 
     MainContent.prototype.render = function() {
       MainContent.__super__.render.apply(this, arguments);
-      return this.$el.append(this.proposalList.render());
+      if (!this.proposalList) {
+        this.proposalList = new Sensus.ProposalList;
+        this.$('#ProposalList').replaceWith(this.proposalList.render());
+        this.proposalView = new Sensus.ProposalView({
+          proposalURL: '/testdata/SE-0180.html'
+        });
+        this.$('#ProposalView').replaceWith(this.proposalView.render());
+      }
+      this.update();
+      return this.$el;
+    };
+
+    MainContent.prototype.update = function() {
+      this.proposalList.$el.addClass("col-md-4");
+      return this.proposalView.$el.addClass("col-md-8");
     };
 
     return MainContent;

@@ -1,0 +1,329 @@
+<h1>String Index Overhaul</h1>
+<ul>
+<li>Proposal: <a href="/apple/swift-evolution/blob/master/proposals/0180-string-index-overhaul.md">SE-0180</a></li>
+<li>Authors: <a href="https://github.com/dabrahams">Dave Abrahams</a></li>
+<li>Review Manager: <a href="https://github.com/tkremenek">Ted Kremenek</a></li>
+<li>Status: <strong>Active review (June 22...28)</strong></li>
+<li>Pull Request Implementing This Proposal: <a href="https://github.com/apple/swift/pull/9806">https://github.com/apple/swift/pull/9806</a></li>
+<li>Previous Revision: <a href="https://github.com/apple/swift-evolution/blob/72b8d90becd60b7cc7695607ae908ef251f1e966/proposals/0180-string-index-overhaul.md">1</a></li>
+</ul>
+<p><em>During the review process, add the following fields as needed:</em></p>
+<h2><a id="user-content-introduction" class="anchor" href="#introduction" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Introduction</h2>
+<p>Today <code>String</code> shares an <code>Index</code> type with its <code>CharacterView</code> but not
+with its <code>UTF8View</code>, <code>UTF16View</code>, or <code>UnicodeScalarView</code>.  This
+proposal redefines <code>String.UTF8View.Index</code>, <code>String.UTF16View.Index</code>,
+and <code>String.CharacterView.Index</code> as typealiases for <code>String.Index</code>,
+and exposes a public <code>encodedOffset</code> property and initializer that can
+be used to serialize and deserialize positions in a <code>String</code> or
+<code>Substring</code>.</p>
+<p>Swift-evolution thread: <a href="https://lists.swift.org/pipermail/swift-evolution/Week-of-Mon-20170529/036874.html">Pitch: String Index Overhaul</a></p>
+<h2><a id="user-content-motivation" class="anchor" href="#motivation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Motivation</h2>
+<p>The different index types are supported by a set of <code>Index</code>
+initializers, which are failable whenever the source index might not
+correspond to a position in the target view:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">if</span> <span class="pl-k">let</span> j <span class="pl-k">=</span> <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>.<span class="pl-c1">Index</span>(
+  someUTF16Position, <span class="pl-c1">within</span>: s.<span class="pl-c1">unicodeScalars</span>) {
+  <span class="pl-k">...</span> 
+}</pre></div>
+<p>The current API is as follows:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.Index {
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarIndex</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>)
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>)
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>)
+}
+
+<span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UTF16View.Index {
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>)
+  <span class="pl-k">init</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarIndex</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>)
+  <span class="pl-k">init</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>)
+}
+
+<span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UTF8View.Index {
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>)
+  <span class="pl-k">init</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarIndex</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>)
+  <span class="pl-k">init</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>)
+}
+
+<span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UnicodeScalarView.Index {
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>)
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>)
+  <span class="pl-k">init</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>)
+}</pre></div>
+<p>These initializers are supplemented by a corresponding set of
+convenience conversion methods:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">if</span> <span class="pl-k">let</span> j <span class="pl-k">=</span> someUTF16Position.<span class="pl-c1">samePosition</span>(<span class="pl-c1">in</span>: s.<span class="pl-c1">unicodeScalars</span>) {
+  <span class="pl-k">...</span> 
+}</pre></div>
+<p>with the following API:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.Index {
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>.<span class="pl-c1">Index</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>.<span class="pl-c1">Index</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(
+    <span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>.<span class="pl-c1">Index</span>
+}
+
+<span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UTF16View.Index {
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(
+    <span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+}
+
+<span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UTF8View.Index {
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(
+    <span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+}
+
+<span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UnicodeScalarView.Index {
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>.<span class="pl-c1">Index</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>.<span class="pl-c1">Index</span>
+}</pre></div>
+<p>The result is a great deal of API surface area for apparently little
+gain in ordinary code, that normally only interchanges indices among
+views when the positions match up exactly (i.e. when the conversion is
+going to succeed).  Also, the resulting code is needlessly awkward.</p>
+<p>Finally, the opacity of these index types makes it difficult to record
+<code>String</code> or <code>Substring</code> positions in files or other archival forms,
+and reconstruct the original positions with respect to a deserialized
+<code>String</code> or <code>Substring</code>.</p>
+<h2><a id="user-content-proposed-solution" class="anchor" href="#proposed-solution" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Proposed solution</h2>
+<p>All <code>String</code> views will use a single index type (<code>String.Index</code>), so
+that positions can be interchanged without awkward explicit
+conversions:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> html<span class="pl-k">:</span> <span class="pl-c1">String</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>See &lt;a href=<span class="pl-cce">\"</span>http://swift.org<span class="pl-cce">\"</span>&gt;swift.org&lt;/a&gt;<span class="pl-pds">"</span></span>
+
+<span class="pl-c"><span class="pl-c">//</span> Search the UTF16, instead of characters, for performance reasons:</span>
+<span class="pl-c"></span><span class="pl-k">let</span> <span class="pl-k">open</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;<span class="pl-pds">"</span></span>.<span class="pl-c1">utf16</span>.<span class="pl-c1">first</span><span class="pl-k">!</span>, close <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>&gt;<span class="pl-pds">"</span></span>.<span class="pl-c1">utf16</span>.<span class="pl-c1">first</span><span class="pl-k">!</span>
+<span class="pl-k">let</span> tagStart <span class="pl-k">=</span> html.<span class="pl-c1">utf16</span>.<span class="pl-c1">index</span>(<span class="pl-c1">of</span>: <span class="pl-k">open</span>)
+<span class="pl-k">let</span> tagEnd <span class="pl-k">=</span> html.<span class="pl-c1">utf16</span>[tagStart<span class="pl-k">...</span>].<span class="pl-c1">index</span>(<span class="pl-c1">of</span>: close)
+
+<span class="pl-c"><span class="pl-c">//</span> Slice the String with the UTF-16 indices to retrieve the tag.</span>
+<span class="pl-c"></span><span class="pl-k">let</span> tag <span class="pl-k">=</span> html[tagStart<span class="pl-k">...</span><span class="pl-smi">tagEnd</span>]</pre></div>
+<p>A property and an intializer will be added to <code>String.Index</code>, exposing
+the offset of the index in code units (currently only UTF-16) from the
+beginning of the string:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> n<span class="pl-k">:</span> <span class="pl-c1">Int</span> <span class="pl-k">=</span> html.<span class="pl-c1">endIndex</span>.<span class="pl-smi">encodedOffset</span>
+<span class="pl-k">let</span> end <span class="pl-k">=</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>(<span class="pl-c1">encodedOffset</span>: n)
+<span class="pl-c1">assert</span>(end <span class="pl-k">==</span> <span class="pl-c1">String</span>.<span class="pl-c1">endIndex</span>)</pre></div>
+<h1><a id="user-content-comparison-and-subscript-semantics" class="anchor" href="#comparison-and-subscript-semantics" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Comparison and Subscript Semantics</h1>
+<p>When two indices being compared correspond to positions that are valid
+in any single <code>String</code> view, comparison semantics are already fully
+specified by the <code>Collection</code> requirements.  The other cases occur
+when indices fall between Unicode scalar boundaries in views having
+distinct encodings.  For example, the string <code>"\u{1f773}"</code> (“🝳”) is
+encoded as <code>0xD83D, 0xDF73</code> in UTF-16 and <code>0xF0, 0x9F, 0x9D, 0xB3</code> in
+UTF-8, and there is no obvious way to compare the second positions in
+each of those sequences.  The proposed rule is that such indices are
+compared by comparing their <code>encodedOffset</code>s.  Such index values are
+not totally ordered but do satisfy strict weak ordering requirements,
+which is sufficient for algorithms such as <code>sort</code> to exhibit sensible
+behavior.  We might consider loosening the specified requirements on
+these algorithms and on <code>Comparable</code> to support strict weak ordering,
+but for now we can treat such index pairs as being formally outside
+the domain of comparison, like any other indices from completely
+distinct collections.</p>
+<p>With respect to subscripts, an index that does not fall on an exact
+boundary in a given <code>String</code> or <code>Substring</code> view will be treated as
+falling at its <code>encodedOffset</code> in the underlying code units, with the
+actual contents of the result being an emergent property of applying
+the usual Unicode rules for decoding those code units.  For example,
+when slicing a string with an index <code>i</code> that falls between two
+<code>Character</code> boundaries, <code>i.encodedOffset</code> is treated as a position in
+the string's underlying code units, and the <code>Character</code>s of the result
+are determined by performing standard Unicode grapheme breaking on the
+resulting sequence of code units.</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> s <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>e<span class="pl-cce">\u{301}</span>galite<span class="pl-cce">\u{301}</span><span class="pl-pds">"</span></span>           <span class="pl-c"><span class="pl-c">//</span> "égalité"</span>
+<span class="pl-c"></span><span class="pl-k">let</span> i <span class="pl-k">=</span> <span class="pl-c1">Array</span>(s.<span class="pl-c1">unicodeScalars</span>.<span class="pl-c1">indices</span>)
+<span class="pl-c1">print</span>(s[i[<span class="pl-c1">1</span>]<span class="pl-k">...</span>])                         <span class="pl-c"><span class="pl-c">//</span> "◌́galité"</span>
+<span class="pl-c"></span><span class="pl-c1">print</span>(s[<span class="pl-k">..&lt;</span>p.<span class="pl-c1">last</span><span class="pl-k">!</span>])                      <span class="pl-c"><span class="pl-c">//</span> "égalite"</span>
+<span class="pl-c"></span><span class="pl-c1">print</span>(s[i[<span class="pl-c1">1</span>])                             <span class="pl-c"><span class="pl-c">//</span> "◌́"</span></pre></div>
+<p>Similarly, assignment to a slice of a string is performed by replacing
+the corresponding code units, and again the resulting <code>Characters</code> are
+determined by re-applying standard grapheme breaking rules.</p>
+<p>Replacing the failable APIs listed <a href="#motivation">above</a> that detect
+whether an index represents a valid position in a given view, and
+enhancement that explicitly round index positions to nearby boundaries
+in a given view, are left to a later proposal.  For now, we do not
+propose to remove the existing index conversion APIs.</p>
+<h2><a id="user-content-detailed-design" class="anchor" href="#detailed-design" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Detailed design</h2>
+<p><code>String.Index</code> acquires an <code>encodedOffset</code> property and initializer:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.Index {
+  <span class="pl-c"><span class="pl-c">///</span> Creates a position corresponding to the given offset in a</span>
+<span class="pl-c"></span>  <span class="pl-c"><span class="pl-c">///</span> `String`'s underlying (UTF-16) code units.</span>
+<span class="pl-c"></span>  <span class="pl-k">init</span>(<span class="pl-smi"><span class="pl-en">encodedOffset</span></span>: <span class="pl-c1">Int</span>)
+
+  <span class="pl-c"><span class="pl-c">///</span> The position of this index expressed as an offset from the</span>
+<span class="pl-c"></span>  <span class="pl-c"><span class="pl-c">///</span> beginning of the `String`'s underlying (UTF-16) code units.</span>
+<span class="pl-c"></span>  <span class="pl-k">var</span> encodedOffset<span class="pl-k">:</span> <span class="pl-c1">Int</span>
+}</pre></div>
+<p><code>Index</code> types of <code>String.UTF8View</code>, <code>String.UTF16View</code>, and
+<code>String.UnicodeScalarView</code> are replaced by <code>String.Index</code>:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UTF8View {
+  <span class="pl-k">typealias</span> <span class="pl-en">Index</span> <span class="pl-k">=</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>
+}
+<span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UTF16View {
+  <span class="pl-k">typealias</span> <span class="pl-en">Index</span> <span class="pl-k">=</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>
+}
+<span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UnicodeScalarView {
+  <span class="pl-k">typealias</span> <span class="pl-en">Index</span> <span class="pl-k">=</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>
+}</pre></div>
+<p>Because the index types are collapsing, index conversion methods and
+initializers are reduced to the following:</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">public</span> <span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.Index {
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>)
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>)
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>)
+  <span class="pl-k">init?</span>(<span class="pl-smi"><span class="pl-en">_</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span>, <span class="pl-smi"><span class="pl-en">within</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>)
+
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF8View</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UTF16View</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  <span class="pl-k">func</span> <span class="pl-en">samePosition</span>(<span class="pl-smi"><span class="pl-en">in</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">UnicodeScalarView</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+}</pre></div>
+<h2><a id="user-content-source-compatibility" class="anchor" href="#source-compatibility" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Source compatibility</h2>
+<p>Because of the collapse of index
+types, <a href="#motivation">existing non-failable APIs</a> become failable.  To
+avoid breaking Swift 3 code, the following overloads of existing
+functions are added, allowing the resulting optional indices to be
+used where previously non-optional indices were used.  These overloads
+were driven by making the new APIs work with existing code, including
+the Swift source compatibility test suite, and should be viewed as
+migration aids only, rather than additions to the Swift 3 API.</p>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">Optional</span></span> <span class="pl-k">where</span> Wrapped <span class="pl-k">==</span> <span class="pl-c1">String</span>.<span class="pl-c1">Index</span> {
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional indices<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">static</span> <span class="pl-k">func</span> <span class="pl-en">..&lt;</span>(
+    <span class="pl-smi"><span class="pl-en">lhs</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>, <span class="pl-smi"><span class="pl-en">rhs</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  ) <span class="pl-k">-&gt;</span> <span class="pl-c1">Range</span>&lt;<span class="pl-c1">String</span>.<span class="pl-c1">Index</span>&gt; {
+    <span class="pl-k">return</span> lhs<span class="pl-k">!</span> <span class="pl-k">..&lt;</span> rhs<span class="pl-k">!</span>
+  }
+
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional indices<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">static</span> <span class="pl-k">func</span> <span class="pl-en">...</span>(
+    <span class="pl-smi"><span class="pl-en">lhs</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>, <span class="pl-smi"><span class="pl-en">rhs</span></span>: <span class="pl-c1">String</span>.<span class="pl-c1">Index</span><span class="pl-k">?</span>
+  ) <span class="pl-k">-&gt;</span> <span class="pl-c1">ClosedRange</span>&lt;<span class="pl-c1">String</span>.<span class="pl-c1">Index</span>&gt; {
+    <span class="pl-k">return</span> lhs<span class="pl-k">!</span> <span class="pl-k">...</span> rhs<span class="pl-k">!</span>
+  }
+}
+
+<span class="pl-c"><span class="pl-c">//</span> backward compatibility for index interchange.  </span>
+<span class="pl-c"></span><span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UTF16View {
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">index</span>(<span class="pl-en">after</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">Index</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">index</span>(<span class="pl-c1">after</span>: i)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">index</span>(
+    <span class="pl-en">_</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>, <span class="pl-en">offsetBy</span> <span class="pl-smi">n</span>: <span class="pl-c1">IndexDistance</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">Index</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">index</span>(i<span class="pl-k">!</span>, <span class="pl-c1">offsetBy</span>: n)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional indices<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">distance</span>(<span class="pl-en">from</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>, <span class="pl-en">to</span> <span class="pl-smi">j</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">IndexDistance</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">distance</span>(<span class="pl-c1">from</span>: i<span class="pl-k">!</span>, <span class="pl-c1">to</span>: j<span class="pl-k">!</span>)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">subscript</span>(<span class="pl-c1">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> Unicode.<span class="pl-c1">UTF16</span>.<span class="pl-c1">CodeUnit</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">self</span>[i<span class="pl-k">!</span>]
+  }
+}
+
+<span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UTF8View {
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">index</span>(<span class="pl-en">after</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">Index</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">index</span>(<span class="pl-c1">after</span>: i<span class="pl-k">!</span>)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">index</span>(<span class="pl-en">_</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>, <span class="pl-en">offsetBy</span> <span class="pl-smi">n</span>: <span class="pl-c1">IndexDistance</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">Index</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">index</span>(i<span class="pl-k">!</span>, <span class="pl-c1">offsetBy</span>: n)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional indices<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">distance</span>(
+    <span class="pl-en">from</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>, <span class="pl-en">to</span> <span class="pl-smi">j</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">IndexDistance</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">distance</span>(<span class="pl-c1">from</span>: i<span class="pl-k">!</span>, <span class="pl-c1">to</span>: j<span class="pl-k">!</span>)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">subscript</span>(<span class="pl-c1">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> Unicode.<span class="pl-c1">UTF8</span>.<span class="pl-c1">CodeUnit</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">self</span>[i<span class="pl-k">!</span>]
+  }
+}
+
+<span class="pl-c"><span class="pl-c">//</span> backward compatibility for index interchange.  </span>
+<span class="pl-c"></span><span class="pl-k">extension</span> <span class="pl-en"><span class="pl-c1">String</span></span>.UnicodeScalarView {
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">index</span>(<span class="pl-en">after</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">Index</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">index</span>(<span class="pl-c1">after</span>: i)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">index</span>(<span class="pl-en">_</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>,  <span class="pl-en">offsetBy</span> <span class="pl-smi">n</span>: <span class="pl-c1">IndexDistance</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">Index</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">index</span>(i<span class="pl-k">!</span>, <span class="pl-c1">offsetBy</span>: n)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional indices<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">func</span> <span class="pl-en">distance</span>(<span class="pl-en">from</span> <span class="pl-smi">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>, <span class="pl-en">to</span> <span class="pl-smi">j</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> <span class="pl-c1">IndexDistance</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">distance</span>(<span class="pl-c1">from</span>: i<span class="pl-k">!</span>, <span class="pl-c1">to</span>: j<span class="pl-k">!</span>)
+  }
+  <span class="pl-k">@available</span>(
+    swift, <span class="pl-k">deprecated</span>: <span class="pl-c1">3.2</span>, <span class="pl-k">obsoleted</span>: <span class="pl-c1">4.0</span>,
+    <span class="pl-k">message</span>: <span class="pl-s"><span class="pl-pds">"</span>Any String view index conversion can fail in Swift 4; please unwrap the optional index<span class="pl-pds">"</span></span>)
+  <span class="pl-k">public</span> <span class="pl-k">subscript</span>(<span class="pl-c1">i</span>: <span class="pl-c1">Index</span><span class="pl-k">?</span>) <span class="pl-k">-&gt;</span> Unicode.<span class="pl-smi">Scalar</span> {
+    <span class="pl-k">return</span> <span class="pl-c1">self</span>[i<span class="pl-k">!</span>]
+  }
+}</pre></div>
+<ul>
+<li>
+<p><strong>Q</strong>: Will existing correct Swift 3 applications stop compiling due
+to this change?</p>
+<p><strong>A</strong>: it is possible but unlikely.  The existing index conversion
+APIs are relatively rarely used, and the overloads listed above
+handle the common cases in Swift 3 compatibility mode.</p>
+</li>
+<li>
+<p><strong>Q</strong>: Will applications still compile but produce
+different behavior than they used to?</p>
+<p><strong>A</strong>: No.</p>
+</li>
+<li>
+<p><strong>Q</strong>: Is it possible to automatically migrate from the old syntax
+to the new syntax?</p>
+<p><strong>A</strong>: Yes, although usages of these APIs may be rare enough that it
+isn't worth the trouble.</p>
+</li>
+<li>
+<p><strong>Q</strong>: Can Swift applications be written in a common subset that works
+both with Swift 3 and Swift 4 to aid in migration?</p>
+<p><strong>A</strong>: Yes, the Swift 4 APIs will all be available in Swift 3 mode.</p>
+</li>
+</ul>
+<h2><a id="user-content-effect-on-abi-stability" class="anchor" href="#effect-on-abi-stability" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Effect on ABI stability</h2>
+<p>This proposal changes the ABI of the standard library.</p>
+<h2><a id="user-content-effect-on-api-resilience" class="anchor" href="#effect-on-api-resilience" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Effect on API resilience</h2>
+<p>This proposal makes no changes to the resilience of any APIs.</p>
+<h2><a id="user-content-alternatives-considered" class="anchor" href="#alternatives-considered" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Alternatives considered</h2>
+<p>The only alternative considered was no action.</p>
